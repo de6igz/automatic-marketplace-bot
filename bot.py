@@ -69,10 +69,16 @@ def show_buyer_categories(message):
 def show_buyer_products(message):
     cursor.execute('select product_number from products order by product_number DESC limit 1')
     amount_of_orders = cursor.fetchall()
-    for row in amount_of_orders:
+    temp = cursor.execute('select description,photo_link from products')
+    for row in temp:
+        bot.send_message(message.chat.id, f'{row[0]}')
+        img = open(f'{row[1]}', 'rb')
+        bot.send_photo(message.chat.id, img)
+
+
+"""    for row in amount_of_orders:
         num = row[0]
-    for k in num+1:
-        bot.send_message()
+    for k in num+1:"""
 
 
 def seller_menu(message):
