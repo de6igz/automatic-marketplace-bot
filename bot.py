@@ -73,11 +73,15 @@ def creating_form(message):
 
 
 def deciding_category(message):
+    buyer_or_seller_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    buyer_or_seller_markup.add('Я покупатель', 'Я продавец')
+    if message.text == 'Назад в главное меню':
+        bot.send_message(message.chat.id, 'Главное меню', reply_markup=buyer_or_seller_markup)
     if message.text == 'Верхняя одежда':
         creating_upwear_form(message)
-    elif message.text == 'Нижняя одежда':
+    if message.text == 'Нижняя одежда':
         creating_underwear_form(message)
-    elif message.text == 'Обувь':
+    if message.text == 'Обувь':
         creating_shoe_form(message)
     else:
         bot.send_message(message.chat.id, 'Не корректный ввод, попробуйте еще раз создать заявку')
