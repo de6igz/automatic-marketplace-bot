@@ -1,3 +1,5 @@
+import re
+
 import telebot
 from telebot import types
 
@@ -57,12 +59,43 @@ def deciding_category(message):
         creating_underwear_form(message)
     elif message.text == 'Обувь':
         creating_shoe_form(message)
+    else:
+        bot.send_message(message.chat.id, 'Не корректный ввод, попробуйте еще раз создать заявку')
+        creating_form(message)
 
 
 def creating_upwear_form(message):
+    img = open('media/nike_hoodie.jpg', 'rb')
     bot.send_message(message.chat.id,
-                     'Отправьте анкету по следующей форме: <b>\nФИО\nНаименование товвара\nЦена в рублях</b>\n<b><i>Пример анкеты</i></b>\nИванов Иван Иванович\nNike Air Jordan 1\n15000 рублей',
+                     'Отправьте анкету по следующей форме: <b>\nФИО\nНик в телеграмме\nНаименование товвара\nЦена в рублях</b>\n\n<b><i>Пример анкеты:</i></b>\n',
                      parse_mode='HTML')
+    bot.send_message(message.chat.id,
+                     'Иванов Иван Иванович\n@rare_items_shop_bot\nNike Air Jordan 1\n15000 рублей')
+    msg = bot.send_photo(message.chat.id, img)
+    bot.register_next_step_handler(msg, check_form)
+
+
+def check_form(message):
+    form = str(message.text)
+    if re.search(r'[А-Я]\w+\s[А-Я]\w+\s[А-Я]\w+\s', form):
+        if re.search(r'@\w+', form):
+            if re.search(r'\d+ рублей', form):
+                msg = bot.send_message(message.chat.id, 'Теперь отправьте фото товара')
+                bot.register_next_step_handler(msg, download_picture)
+            else:
+                bot.send_message(message.chat.id, 'Не корректный ввод стоимости, попробуйте еще раз создать заявку')
+                creating_form(message)
+        else:
+            bot.send_message(message.chat.id, 'Не корректный ввод телеграм ника, попробуйте еще раз создать заявку')
+            creating_form(message)
+    else:
+        bot.send_message(message.chat.id, 'Не корректный ввод имени, попробуйте еще раз создать заявку')
+        creating_form(message)
+
+
+def download_picture(message):
+    bot.get_file()
+    bot.download_file()
 
 
 def creating_underwear_form(message):
