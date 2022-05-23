@@ -96,13 +96,22 @@ def check_form(message):
     else:
         bot.send_message(message.chat.id, 'Не корректный ввод имени, попробуйте еще раз создать заявку')
         creating_form(message)
-    cursor.execute(f"insert into sellers(telegram_tag) values ('{telegram_tag}')")
-    sqlite_connection.commit()
+    try:
+        cursor.execute(f"insert into sellers(telegram_tag) values ('{message.from_user.id}')")
+        sqlite_connection.commit()
+    except Exception as e:
+        e
 
 
 @bot.message_handler(content_types=['photo'])
 def download_picture(message):
-    global nomer
+    nomer=0
+    cursor.execute(f'select number_of_products from sellers where telegram_tag like "{message.from_user.id}"')
+    temp = cursor.fetchall()
+    for row in temp:
+        nomer=row[0]
+    nomer = int(nomer)
+    print(nomer,type(nomer))
     print('message.photo =', message.photo)
     fileID = message.photo[-1].file_id
     print('fileID =', fileID)
@@ -110,6 +119,8 @@ def download_picture(message):
     print('file.file_path =', file_info.file_path)
     downloaded_file = bot.download_file(file_info.file_path)
     nomer = nomer + 1
+    cursor.execute(f'update sellers set number_of_products = {nomer} where telegram_tag like "{message.from_user.id}"')
+    sqlite_connection.commit()
     with open(f"products/image_{message.from_user.id}_{nomer}.jpg", 'wb') as new_file:
         new_file.write(downloaded_file)
         new_file.close()
