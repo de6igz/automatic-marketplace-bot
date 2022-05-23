@@ -2,10 +2,14 @@ import re
 
 import telebot
 from telebot import types
-
+import sqlite3
 import gitignore.tokens
 
 bot = telebot.TeleBot(gitignore.tokens.token)
+
+sqlite_connection = sqlite3.connect('database.db', check_same_thread=False)
+cursor = sqlite_connection.cursor()
+sqlite_connection.commit()
 
 
 @bot.message_handler(commands=['start'])
@@ -79,6 +83,7 @@ def check_form(message):
     form = str(message.text)
     if re.search(r'[А-Я]\w+\s[А-Я]\w+\s[А-Я]\w+\s', form):
         if re.search(r'@\w+', form):
+            telegram_tag = re.search(r'@\w+', form).group(0)
             if re.search(r'\d+ рублей', form):
                 msg = bot.send_message(message.chat.id, 'Теперь отправьте фото товара')
                 bot.register_next_step_handler(msg, download_picture)
@@ -91,11 +96,23 @@ def check_form(message):
     else:
         bot.send_message(message.chat.id, 'Не корректный ввод имени, попробуйте еще раз создать заявку')
         creating_form(message)
+    cursor.execute(f"insert into sellers(telegram_tag) values ('{telegram_tag}')")
+    sqlite_connection.commit()
 
 
+@bot.message_handler(content_types=['photo'])
 def download_picture(message):
-    bot.get_file()
-    bot.download_file()
+    global nomer
+    print('message.photo =', message.photo)
+    fileID = message.photo[-1].file_id
+    print('fileID =', fileID)
+    file_info = bot.get_file(fileID)
+    print('file.file_path =', file_info.file_path)
+    downloaded_file = bot.download_file(file_info.file_path)
+    nomer = nomer + 1
+    with open(f"products/image_{message.from_user.id}_{nomer}.jpg", 'wb') as new_file:
+        new_file.write(downloaded_file)
+        new_file.close()
 
 
 def creating_underwear_form(message):
