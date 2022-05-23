@@ -30,13 +30,21 @@ def main(message):
     if message.text == 'Я продавец':
         seller_menu(message)
     if message.text == 'Создать новую анкету':
-        creating_form(message)
+        creating_upwear_form(message)
     if message.text == 'Я покупатель':
         show_buyer_categories(message)
     if message.text == 'Назад в главное меню':
         bot.send_message(message.chat.id, 'Главное меню', reply_markup=buyer_or_seller_markup)
     if message.text == 'Мои анкеты':
         show_my_products(message)
+    if message.text == 'Показать товары':
+        show_buyer_products(message)
+
+
+def main_menu(message):
+    buyer_or_seller_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    buyer_or_seller_markup.add('Я покупатель', 'Я продавец')
+    bot.send_message(message.chat.id, 'Главное меню', reply_markup=buyer_or_seller_markup)
 
 
 def show_my_products(message):
@@ -52,40 +60,26 @@ def show_my_products(message):
 
 
 def show_buyer_categories(message):
-    categoris = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    categoris.add('Назад в главное меню', row_width=1)
-    categoris.add('Верхняя одежда', 'Нижняя одежда', 'Обувь', row_width=3)
-    bot.send_message(message.chat.id, 'Выберите категорию', reply_markup=categoris)
+    show_products_to_buyer = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    show_products_to_buyer.add('Назад в главное меню', 'Показать товары', row_width=2)
+    bot.send_message(message.chat.id, '<b><i>Добро пожаловать!</i></b>', reply_markup=show_products_to_buyer,
+                     parse_mode='HTML')
+
+
+def show_buyer_products(message):
+    cursor.execute('select product_number from products order by product_number DESC limit 1')
+    amount_of_orders = cursor.fetchall()
+    for row in amount_of_orders:
+        num = row[0]
+    for k in num+1:
+        bot.send_message()
 
 
 def seller_menu(message):
     seller_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     seller_menu_markup.add('Назад в главное меню', 'Мои анкеты', 'Создать новую анкету')
-    bot.send_message(message.chat.id, 'Добро пожаловать обратно', reply_markup=seller_menu_markup)
-
-
-def creating_form(message):
-    creating_form_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    creating_form_markup.add('Назад в главное меню', row_width=1)
-    creating_form_markup.add('Верхняя одежда', 'Нижняя одежда', 'Обувь', row_width=3)
-    msg = bot.send_message(message.chat.id, 'Выбери категорию', reply_markup=creating_form_markup)
-    bot.register_next_step_handler(msg, deciding_category)
-
-
-def deciding_category(message):
-    buyer_or_seller_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    buyer_or_seller_markup.add('Я покупатель', 'Я продавец')
-    if message.text == 'Назад в главное меню':
-        bot.send_message(message.chat.id, 'Главное меню', reply_markup=buyer_or_seller_markup)
-    if message.text == 'Верхняя одежда':
-        creating_upwear_form(message)
-    if message.text == 'Нижняя одежда':
-        creating_underwear_form(message)
-    if message.text == 'Обувь':
-        creating_shoe_form(message)
-    else:
-        bot.send_message(message.chat.id, 'Не корректный ввод, попробуйте еще раз создать заявку')
-        creating_form(message)
+    bot.send_message(message.chat.id, '<b><i>Добро пожаловать!</i></b>', reply_markup=seller_menu_markup,
+                     parse_mode='HTML')
 
 
 def creating_upwear_form(message):
@@ -110,13 +104,13 @@ def check_form(message):
                 bot.register_next_step_handler(msg, download_picture)
             else:
                 bot.send_message(message.chat.id, 'Не корректный ввод стоимости, попробуйте еще раз создать заявку')
-                creating_form(message)
+                main_menu(message)
         else:
             bot.send_message(message.chat.id, 'Не корректный ввод телеграм ника, попробуйте еще раз создать заявку')
-            creating_form(message)
+            main_menu(message)
     else:
         bot.send_message(message.chat.id, 'Не корректный ввод имени, попробуйте еще раз создать заявку')
-        creating_form(message)
+        main_menu(message)
     try:
         cursor.execute(f"insert into sellers(telegram_tag) values ('{message.from_user.id}')")
         sqlite_connection.commit()
@@ -147,21 +141,19 @@ def download_picture(message):
         with open(f"products/image_{message.from_user.id}_{nomer}.jpg", 'wb') as new_file:
             new_file.write(downloaded_file)
             new_file.close()
+        num_for_product = 0
+        cursor.execute(f'select product_number from products limit 1 offset {num_for_product}')
+        temp1 = cursor.fetchall()
+        for row1 in temp1:
+            num_for_product = row1[0]
+        num_for_product = num_for_product + 1
         cursor.execute(
-            f"insert into products(description,photo_link,product_ID) values ('{temp_user_form_description[message.from_user.id]}','products/image_{message.from_user.id}_{nomer}.jpg','{message.from_user.id}_{nomer}')")
+            f"insert into products(description,photo_link,product_ID,product_number) values ('{temp_user_form_description[message.from_user.id]}','products/image_{message.from_user.id}_{nomer}.jpg','{message.from_user.id}_{nomer}','{num_for_product}')")
         sqlite_connection.commit()
         bot.send_message(message.chat.id, '<i>Товар успешно добавлен✅</i>', parse_mode='HTML')
     except Exception as e:
         bot.send_message(message.chat.id, 'Не корректный формат изображения')
-        creating_form(message)
-
-
-def creating_underwear_form(message):
-    pass
-
-
-def creating_shoe_form(message):
-    pass
+        main_menu(message)
 
 
 bot.infinity_polling()
