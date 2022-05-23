@@ -86,6 +86,7 @@ def check_form(message):
             telegram_tag = re.search(r'@\w+', form).group(0)
             if re.search(r'\d+ рублей', form):
                 msg = bot.send_message(message.chat.id, 'Теперь отправьте фото товара')
+                cursor.execute(f"insert into products(description) values ('{form}')")
                 bot.register_next_step_handler(msg, download_picture)
             else:
                 bot.send_message(message.chat.id, 'Не корректный ввод стоимости, попробуйте еще раз создать заявку')
@@ -105,13 +106,13 @@ def check_form(message):
 
 @bot.message_handler(content_types=['photo'])
 def download_picture(message):
-    nomer=0
+    nomer = 0
     cursor.execute(f'select number_of_products from sellers where telegram_tag like "{message.from_user.id}"')
     temp = cursor.fetchall()
     for row in temp:
-        nomer=row[0]
+        nomer = row[0]
     nomer = int(nomer)
-    print(nomer,type(nomer))
+    print(nomer, type(nomer))
     print('message.photo =', message.photo)
     fileID = message.photo[-1].file_id
     print('fileID =', fileID)
@@ -124,6 +125,8 @@ def download_picture(message):
     with open(f"products/image_{message.from_user.id}_{nomer}.jpg", 'wb') as new_file:
         new_file.write(downloaded_file)
         new_file.close()
+    cursor.execute(f"insert into products(photo_link,product_ID) values ('products/image_{message.from_user.id}_{nomer}.jpg','{message.from_user.id}_{nomer}')")
+    sqlite_connection.commit()
 
 
 def creating_underwear_form(message):
