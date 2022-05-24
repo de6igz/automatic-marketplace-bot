@@ -67,18 +67,11 @@ def show_buyer_categories(message):
 
 
 def show_buyer_products(message):
-    cursor.execute('select product_number from products order by product_number DESC limit 1')
-    amount_of_orders = cursor.fetchall()
     temp = cursor.execute('select description,photo_link from products')
     for row in temp:
         bot.send_message(message.chat.id, f'{row[0]}')
         img = open(f'{row[1]}', 'rb')
         bot.send_photo(message.chat.id, img)
-
-
-"""    for row in amount_of_orders:
-        num = row[0]
-    for k in num+1:"""
 
 
 def seller_menu(message):
@@ -91,7 +84,7 @@ def seller_menu(message):
 def creating_upwear_form(message):
     img = open('media/nike_hoodie.jpg', 'rb')
     bot.send_message(message.chat.id,
-                     'Отправьте анкету по следующей форме: <b>\nФИО\nНик в телеграмме\nНаименование товвара\nЦена в рублях</b>\n\n<b><i>Пример анкеты:</i></b>\n',
+                     'Отправьте анкету по следующей форме: <b>\nФИО\nНик в телеграмме\nНаименование товара\nЦена в рублях</b>\n\n<b><i>Пример анкеты:</i></b>\n',
                      parse_mode='HTML')
     bot.send_message(message.chat.id,
                      'Иванов Иван Иванович\n@rare_items_shop_bot\nNike Air Jordan 1\n15000 рублей')
@@ -103,7 +96,6 @@ def check_form(message):
     form = str(message.text)
     if re.search(r'[А-Я]\w+\s[А-Я]\w+\s[А-Я]\w+\s', form):
         if re.search(r'@\w+', form):
-            telegram_tag = re.search(r'@\w+', form).group(0)
             if re.search(r'\d+ рублей', form):
                 msg = bot.send_message(message.chat.id, 'Теперь отправьте фото товара')
                 temp_user_form_description[message.from_user.id] = form
@@ -147,14 +139,8 @@ def download_picture(message):
         with open(f"products/image_{message.from_user.id}_{nomer}.jpg", 'wb') as new_file:
             new_file.write(downloaded_file)
             new_file.close()
-        num_for_product = 0
-        cursor.execute(f'select product_number from products limit 1 offset {num_for_product}')
-        temp1 = cursor.fetchall()
-        for row1 in temp1:
-            num_for_product = row1[0]
-        num_for_product = num_for_product + 1
         cursor.execute(
-            f"insert into products(description,photo_link,product_ID,product_number) values ('{temp_user_form_description[message.from_user.id]}','products/image_{message.from_user.id}_{nomer}.jpg','{message.from_user.id}_{nomer}','{num_for_product}')")
+            f"insert into products(description,photo_link,product_ID) values ('{temp_user_form_description[message.from_user.id]}','products/image_{message.from_user.id}_{nomer}.jpg','{message.from_user.id}_{nomer}')")
         sqlite_connection.commit()
         bot.send_message(message.chat.id, '<i>Товар успешно добавлен✅</i>', parse_mode='HTML')
     except Exception as e:
