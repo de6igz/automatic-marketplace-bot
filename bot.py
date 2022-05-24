@@ -72,6 +72,8 @@ def show_buyer_products(message):
         bot.send_message(message.chat.id, f'{row[0]}')
         img = open(f'{row[1]}', 'rb')
         bot.send_photo(message.chat.id, img)
+    bot.send_message(message.chat.id,
+                     'Если вам понравился какой-либо товар, то щелкнув на телеграм тег в описании товара , вы перейдете в диалог с продавцом')
 
 
 def seller_menu(message):
