@@ -1,2 +1,4 @@
 # Marketplace bot
-<i>Данный бот является автоматизированной торговой площадкой. Пользователь может как добавить слот с новым товаром, так и посмотреть уже существующие </i>
+ Automatic Marketplace to connect buyers and sellers
+ 
+ ### Demo: [![Watch the video](https://img.youtube.com/vi/n2SMhy0cSk0/maxresdefault.jpg)](https://youtu.be/n2SMhy0cSk0)
